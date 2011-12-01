@@ -15,7 +15,14 @@ class GetRecords {
 				echo ("<P>Unable to load $srcurl. Static page " . "update aborted!</P>");
 				exit ();
 			}
-			$htmldata = file_get_contents ( $srcurl );
+			$curl = curl_init();
+			curl_setopt($curl, CURLOPT_URL, $srcurl);
+			curl_setopt($curl, CURLOPT_HEADER, 0);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+			$htmldata = curl_exec($curl);
+			curl_close($curl);
+			
+//			$htmldata = file_get_contents ( $srcurl );
 			fclose ( $dynpage );
 			$tempfile = fopen ( $tempfilename, 'w+' );
 			if (! $tempfile) {
@@ -24,8 +31,8 @@ class GetRecords {
 			}
 			fwrite ( $tempfile, $htmldata );
 			fclose ( $tempfile );
-			$this->_file = $tempfilename;
 		}
+		$this->_file = $tempfilename;
 	}
 	
 	public function getFile() {
