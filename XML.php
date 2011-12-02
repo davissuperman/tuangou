@@ -24,6 +24,7 @@ class XML {
 			curl_setopt ( $curl, CURLOPT_HEADER, 0 );
 			curl_setopt ( $curl, CURLOPT_RETURNTRANSFER, 1 );
 			$htmldata = curl_exec ( $curl );
+			$htmldata = preg_replace ( '/&/', '&amp;', $htmldata );
 			curl_close ( $curl );
 			
 			//			$htmldata = file_get_contents ( $srcurl );
@@ -38,7 +39,7 @@ class XML {
 		}
 		return $tempfilename;
 	}
-	
+
 	function saveXml($file) {
 		$tempfilename = $file;
 		$items_table = array ();
@@ -50,12 +51,12 @@ class XML {
 			foreach ( $tag as $key => $item ) {
 				$value = $parent [$key];
 				$item_key = trim ( $tag [$key] );
-				switch ($item_key){
-					case 'range':
+				switch ($item_key) {
+					case 'range' :
 						$item_key = 'range1';
 						break;
-					default:
-						
+					default :
+				
 				}
 				if (is_numeric ( $value )) {
 					if (( int ) $value > ( int ) strtotime ( "1990-01-01" )) {
@@ -78,10 +79,16 @@ class XML {
 		}
 	
 	}
+	
+	function addMark($var) {
+		return "`" . $var . "`";
+	}
+	
 	function saveXMLTOTable($node, &$content = array(), $key) {
 		$count = 0;
 		$table = $this->_tableName;
 		$table_item = $this->_tableItem;
+		$table_item = array_map(array("XML","addMark"), $table_item);
 		$keys = array_keys ( $table_item );
 		$key_str = implode ( ',', $keys );
 		
@@ -89,6 +96,9 @@ class XML {
 		foreach ( $keys as $every_key ) {
 			$question_mark [] = '?';
 		}
+		if ($node->count () == 1)
+			$node = $node->children ();
+		
 		foreach ( $node->children () as $child_name => $child_node ) {
 			$insert_sql = "insert into $table ";
 			$insert_sql .= "(";
@@ -99,12 +109,12 @@ class XML {
 			
 			$count ++;
 			foreach ( $keys as $every_key ) {
-				if(array_key_exists($every_key, $content)){
-					$c =  $content [$every_key] ;
-				}else{
+				if (array_key_exists ( $every_key, $content )) {
+					$c = $content [$every_key];
+				} else {
 					$c = " ";
 				}
-				$value_array [] = addslashes ($c );
+				$value_array [] = addslashes ( $c );
 			}
 			$insert_sql .= "(" . implode ( ',', $question_mark ) . ")";
 			DataBase::$db->Execute ( $insert_sql, $value_array );
